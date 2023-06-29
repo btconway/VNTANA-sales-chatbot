@@ -25,12 +25,14 @@ memory = ConversationBufferMemory(memory_key="chat_history")
 # Initialize the LLMChain with the ChatAnthropic model
 llm_chain = LLMChain(
     llm=ChatAnthropic(
+    temperature=0.4,
+    max_tokens=8000,
     streaming=True,
     verbose=True,
     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
 ),
     prompt=prompt,
-    verbose=True,
+    verbose=False,
     memory=memory,
 )
 
