@@ -26,7 +26,7 @@ memory = ConversationBufferMemory(memory_key="chat_history")
 llm_chain = LLMChain(
     llm=ChatAnthropic(
     temperature=0.4,
-    max_tokens=8000,
+    max_tokens=75000,
     streaming=True,
     verbose=True,
     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
