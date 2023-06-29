@@ -27,8 +27,8 @@ llm_chain = LLMChain(
     llm=ChatAnthropic(
     model="claude-v1.3-100k",
     temperature=0.4,
-    max_tokens=75000,
-    streaming=False,
+    max_tokens_to_sample=75000,
+    streaming=True,
     verbose=False,
     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
 ),
