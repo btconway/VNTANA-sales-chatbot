@@ -27,8 +27,8 @@ llm_chain = LLMChain(
     llm=ChatAnthropic(
     temperature=0.4,
     max_tokens=75000,
-    streaming=True,
-    verbose=True,
+    streaming=False,
+    verbose=False,
     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
 ),
     prompt=prompt,
