@@ -25,6 +25,7 @@ memory = ConversationBufferMemory(memory_key="chat_history")
 # Initialize the LLMChain with the ChatAnthropic model
 llm_chain = LLMChain(
     llm=ChatAnthropic(
+    model="claude-v1.3-100k",
     temperature=0.4,
     max_tokens=75000,
     streaming=False,
