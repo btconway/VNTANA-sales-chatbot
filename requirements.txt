@@ -1,0 +1,3 @@
+python-dotenv
+langchain==0.0.218
+anthropic==0.2.10
