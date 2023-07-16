@@ -1,60 +1,76 @@
 from langchain.memory import ConversationBufferMemory
 from langchain import OpenAI, LLMChain, PromptTemplate
 from langchain.chat_models import ChatAnthropic
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    AIMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.embeddings import OpenAIEmbeddings
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler 
+from langchain.chains import ConversationChain
 import logging
-import langchain
 import os
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.cache import SQLiteCache
+from dotenv import find_dotenv, load_dotenv
+import streamlit as st
 
+load_dotenv(find_dotenv())
 logging.basicConfig(level=logging.INFO)
 
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+# Read the prompt template 
+with open('Anthropic_Prompt.txt', 'r') as file:
+  template = file.read()
 
-# Replace RedisSemanticCache with SQLiteCache
-langchain.llm_cache = SQLiteCache(database_path=".langchain.db")
-
-# Read the prompt template from a .txt file
-with open('/Users/benconway/Documents/GitHub/VNTANA-sales-chatbot/Anthropic_Prompt.txt', 'r') as file:
-    template = file.read()
-
+# Use 'history' and 'input' as per the ConversationChain requirements
 prompt = PromptTemplate(
-    input_variables=["chat_history", "human_input"], template=template
+  input_variables=["history", "input"],
+  template=template
 )
 
 # Initialize the memory
-memory = ConversationBufferMemory(memory_key="chat_history")
+memory = ConversationBufferMemory()
 
-# Initialize the LLMChain with the ChatAnthropic model
-llm_chain = LLMChain(
-    llm=ChatAnthropic(
-        model="claude-v1.3-100k",
-        temperature=0.4,
-        max_tokens_to_sample=75000,
-        streaming=True,
-        verbose=False,
-        callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
-    ),
-    prompt=prompt,
-    verbose=False,
-    memory=memory,
-)
+def load_chain(model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75000, streaming=True, verbose=True):
+  # Initialize the LLM
+  llm = ChatAnthropic(
+     model=model_name,
+     temperature=temperature,
+     max_tokens_to_sample=max_tokens_to_sample,
+     streaming=streaming,
+     verbose=verbose,
+     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
+  )
 
-# Interactive chat
-while True:
-    human_input = input("You: ")
-    if human_input.lower() == "quit":
-        break
-    response = llm_chain.predict(human_input=human_input)
-    print(response)
-    # Don't print here as it's also printed in the callback
+  # Initialize the ConversationChain
+  conversation = ConversationChain(
+    llm=llm,
+    memory=memory # pass the memory here
+  )
+
+  return conversation
+
+chain = load_chain()
+
+# Streamlit UI
+st.set_page_config(page_title="LangChain Demo", page_icon=":robot:")
+st.header("LangChain Demo")
+
+if "generated" not in st.session_state:
+    st.session_state["generated"] = []
+
+if "past" not in st.session_state:
+    st.session_state["past"] = []
+
+def get_text():
+    input_text = st.text_input("You: ", "Hello, how are you?", key="input")
+    return input_text
+
+user_input = get_text()
+
+if user_input:
+    # Use the prompt template to generate the prompt
+    prompt_text = prompt.format(history=st.session_state["past"], input=user_input)
+    output = chain.run(input=prompt_text)
+
+    st.session_state.past.append(user_input)
+    st.session_state.generated.append(output)
+
+if st.session_state["generated"]:
+    for i in range(len(st.session_state["generated"]) - 1, -1, -1):
+        st.write(f"AI: {st.session_state['generated'][i]}")
+        st.write(f"Human: {st.session_state['past'][i]}")
