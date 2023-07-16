@@ -12,6 +12,8 @@ import streamlit as st
 load_dotenv(find_dotenv())
 logging.basicConfig(level=logging.INFO)
 
+anthropic_api_key = os.environ.get('ANTHROPIC_API_KEY')
+
 # Read the prompt template 
 with open('Anthropic_Prompt.txt', 'r') as file:
   template = file.read()
@@ -31,7 +33,7 @@ def load_chain(model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75
      model=model_name,
      temperature=temperature,
      max_tokens_to_sample=max_tokens_to_sample,
-     streaming=streaming,
+     streaming=True,
      verbose=verbose,
      callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
   )
@@ -47,8 +49,8 @@ def load_chain(model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75
 chain = load_chain()
 
 # Streamlit UI
-st.set_page_config(page_title="LangChain Demo", page_icon=":robot:")
-st.header("LangChain Demo")
+st.set_page_config(page_title="VNTANA Sales", page_icon=":robot:")
+st.header("VNTANA Sales")
 
 if "generated" not in st.session_state:
     st.session_state["generated"] = []
@@ -57,7 +59,7 @@ if "past" not in st.session_state:
     st.session_state["past"] = []
 
 def get_text():
-    input_text = st.text_input("You: ", "Hello, how are you?", key="input")
+    input_text = st.text_input("You: ", "How can I help you?", key="input")
     return input_text
 
 user_input = get_text()
