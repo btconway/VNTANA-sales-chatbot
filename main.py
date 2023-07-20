@@ -37,6 +37,7 @@ class ChainLoader:
         self.conversation_chain_class = conversation_chain_class
         self.callback_manager = callback_manager
 
+    @st.cache(suppress_st_warning=True)  # Add caching here
     def load_chain(self, model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75000, streaming=True, verbose=True):
         chat_model = self._initialize_chat_model(model_name, temperature, max_tokens_to_sample, streaming, verbose)
         conversation_chain = self._initialize_conversation_chain(chat_model)
@@ -61,6 +62,7 @@ class ChainLoader:
 chain_loader = ChainLoader(ChatAnthropic, ConversationChain, CallbackManager([StreamingStdOutCallbackHandler()]))
 chain = chain_loader.load_chain()
 
+@st.cache(suppress_st_warning=True)  # Add caching here
 def read_prompt_template():
     with open('Anthropic_Prompt.txt', 'r') as file:
         return file.read()
