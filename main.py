@@ -22,6 +22,7 @@ langchain.llm_cache = SQLiteCache(database_path=".langchain.db")
 
 class Config:
     def __init__(self):
+
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 
 config = Config()
@@ -39,7 +40,7 @@ class ChainLoader:
         self.callback_manager = callback_manager
 
     @staticmethod
-    @st.cache_data()  # Updated cache function
+    @st.cache_resource()  # Updated cache function
     def load_chain(chat_model_class, conversation_chain_class, _callback_manager, model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75000, streaming=True, verbose=True):
         chat_model = ChainLoader._initialize_chat_model(chat_model_class, _callback_manager, model_name, temperature, max_tokens_to_sample, streaming, verbose)
         conversation_chain = ChainLoader._initialize_conversation_chain(conversation_chain_class, chat_model)
