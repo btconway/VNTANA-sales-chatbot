@@ -10,7 +10,6 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import ConversationChain
 import logging
 import os
-from dotenv import find_dotenv, load_dotenv
 import anthropic
 from langchain import PromptTemplate
 from langchain.cache import SQLiteCache
@@ -23,7 +22,6 @@ langchain.llm_cache = SQLiteCache(database_path=".langchain.db")
 
 class Config:
     def __init__(self):
-        load_dotenv(find_dotenv())
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 
 config = Config()
