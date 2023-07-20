@@ -1,3 +1,7 @@
+import streamlit as st
+
+st.set_page_config(page_title="VNTANA Sales", page_icon=":robot:")
+
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate
 from langchain.chat_models import ChatAnthropic
@@ -7,7 +11,6 @@ from langchain.chains import ConversationChain
 import logging
 import os
 from dotenv import find_dotenv, load_dotenv
-import streamlit as st
 import anthropic
 from langchain import PromptTemplate
 from langchain.cache import SQLiteCache
@@ -37,32 +40,36 @@ class ChainLoader:
         self.conversation_chain_class = conversation_chain_class
         self.callback_manager = callback_manager
 
-    @st.cache(suppress_st_warning=True)  # Add caching here
-    def load_chain(self, model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75000, streaming=True, verbose=True):
-        chat_model = self._initialize_chat_model(model_name, temperature, max_tokens_to_sample, streaming, verbose)
-        conversation_chain = self._initialize_conversation_chain(chat_model)
+    @staticmethod
+    @st.cache_data()  # Updated cache function
+    def load_chain(chat_model_class, conversation_chain_class, _callback_manager, model_name="claude-2.0", temperature=0.3, max_tokens_to_sample=75000, streaming=True, verbose=True):
+        chat_model = ChainLoader._initialize_chat_model(chat_model_class, _callback_manager, model_name, temperature, max_tokens_to_sample, streaming, verbose)
+        conversation_chain = ChainLoader._initialize_conversation_chain(conversation_chain_class, chat_model)
         return conversation_chain
 
-    def _initialize_chat_model(self, model_name, temperature, max_tokens_to_sample, streaming, verbose):
-        return self.chat_model_class(
+    @staticmethod
+    def _initialize_chat_model(chat_model_class, _callback_manager, model_name, temperature, max_tokens_to_sample, streaming, verbose):
+        return chat_model_class(
             model=model_name,
             temperature=temperature,
             max_tokens_to_sample=max_tokens_to_sample,
             streaming=streaming,
             verbose=verbose,
-            callback_manager=self.callback_manager,
+            callback_manager=_callback_manager,
         )
 
-    def _initialize_conversation_chain(self, chat_model):
-        return self.conversation_chain_class(
+    @staticmethod
+    def _initialize_conversation_chain(conversation_chain_class, chat_model):
+        return conversation_chain_class(
             llm=chat_model,
             memory=memory,
         )
 
 chain_loader = ChainLoader(ChatAnthropic, ConversationChain, CallbackManager([StreamingStdOutCallbackHandler()]))
-chain = chain_loader.load_chain()
+chain = ChainLoader.load_chain(chain_loader.chat_model_class, chain_loader.conversation_chain_class, chain_loader.callback_manager)
 
-@st.cache(suppress_st_warning=True)  # Add caching here
+
+@st.cache_data()  # Updated cache function
 def read_prompt_template():
     with open('Anthropic_Prompt.txt', 'r') as file:
         return file.read()
@@ -76,11 +83,13 @@ class StreamlitUI:
         self.prompt = prompt
 
     def run(self):
-        st.set_page_config(page_title="VNTANA Sales", page_icon=":robot:")
         st.header("VNTANA Sales")
 
-        st.session_state.setdefault("generated", [])
-        st.session_state.setdefault("past", [])
+        # Initialize session state variables
+        if 'generated' not in st.session_state:
+            st.session_state.generated = []
+        if 'past' not in st.session_state:
+            st.session_state.past = []
 
         user_input = self.get_text()
 
@@ -100,11 +109,13 @@ class StreamlitUI:
 
         if st.session_state["generated"]:
             for i in range(len(st.session_state["generated"]) - 1, -1, -1):
-                st.write(f"AI: {st.session_state['generated'][i]}")
-                st.write(f"Human: {st.session_state['past'][i]}")
+                with st.chat_message("assistant"):
+                    st.write(f"AI: {st.session_state['generated'][i]}")
+                with st.chat_message("user"):
+                    st.write(f"Human: {st.session_state['past'][i]}")
 
     def get_text(self):
-        return st.text_input("You: ", "", key="input")
+        return st.chat_input("You: ")
 
 ui = StreamlitUI(chain, prompt)
 ui.run()
