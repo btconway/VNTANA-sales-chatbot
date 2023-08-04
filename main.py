@@ -1,6 +1,9 @@
 import streamlit as st
 
-st.set_page_config(page_title="VNTANA Sales", page_icon=":robot:")
+st.set_page_config(page_title="VNTANA Sales Anthropic", page_icon="FVs58Hks_400x400.jpg")
+st.sidebar.image("Profile_Avatar.jpg")
+st.info("`I am an AI that can help you generate sales and marketing content. For example, I can write email sequences, generate marketing copy, and more."
+    "To get the best results, include VNTANA in your request and I can access VNTANA's vector database. You can also say somethign like 'use your tools'`")
 
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate
